@@ -35,7 +35,7 @@ export function RelationshipCard({ relationship, onClick }: RelationshipCardProp
 
   return (
     <div
-      className={`p-4 rounded-lg border-l-4 ${getImportanceColor()} cursor-pointer hover:shadow-md transition-all`}
+      className={`p-4 rounded-xl border-l-4 ${getImportanceColor()} cursor-pointer hover:shadow-lg transition-all transform hover:scale-[1.02] h-fit`}
       onClick={onClick}
     >
       <div className="flex items-start gap-3">
@@ -44,31 +44,31 @@ export function RelationshipCard({ relationship, onClick }: RelationshipCardProp
             <img
               src={relationship.photo}
               alt={relationship.name}
-              className="w-12 h-12 rounded-full object-cover"
+              className="w-16 h-16 rounded-full object-cover shadow-md"
             />
           ) : (
-            <div className="w-12 h-12 rounded-full bg-blue-500 flex items-center justify-center">
+            <div className="w-16 h-16 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center shadow-md">
               <RelationIcon size={24} className="text-white" />
             </div>
           )}
         </div>
 
-        <div className="flex-1 min-w-0">
-          <div className="flex items-center gap-2 mb-2">
-            <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
+        <div className="flex-1 min-w-0 overflow-hidden">
+          <div className="flex items-center gap-2 mb-2 flex-wrap">
+            <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 truncate">
               {relationship.name}
             </h3>
-            <span className={`text-xs px-2 py-1 rounded-full font-semibold ${
-              relationship.importance === 'CRITICAL' ? 'bg-red-100 text-red-800' :
-              relationship.importance === 'HIGH' ? 'bg-orange-100 text-orange-800' :
-              relationship.importance === 'MEDIUM' ? 'bg-yellow-100 text-yellow-800' :
-              'bg-green-100 text-green-800'
+            <span className={`text-xs px-2 py-1 rounded-full font-semibold shrink-0 ${
+              relationship.importance === 'CRITICAL' ? 'bg-rose-100 text-rose-800 border border-rose-200' :
+              relationship.importance === 'HIGH' ? 'bg-amber-100 text-amber-800 border border-amber-200' :
+              relationship.importance === 'MEDIUM' ? 'bg-emerald-100 text-emerald-800 border border-emerald-200' :
+              'bg-slate-100 text-slate-800 border border-slate-200'
             }`}>
               {relationship.importance}
             </span>
           </div>
 
-          <p className="text-sm text-gray-600 dark:text-gray-400 mb-3 font-medium">
+          <p className="text-sm text-gray-600 dark:text-gray-400 mb-3 font-medium truncate">
             {relationship.relation}
           </p>
 
@@ -76,19 +76,27 @@ export function RelationshipCard({ relationship, onClick }: RelationshipCardProp
             <h4 className="text-sm font-semibold text-gray-800 dark:text-gray-200">
               Key Facts:
             </h4>
-            <ul className="space-y-1">
-              {relationship.keyFacts.map((fact, index) => (
+            <ul className="space-y-1 max-h-24 overflow-y-auto">
+              {relationship.keyFacts.slice(0, 3).map((fact, index) => (
                 <li key={index} className="text-sm text-gray-700 dark:text-gray-300 flex items-start gap-2">
-                  <span className="text-blue-500 mt-1">•</span>
-                  <span>{fact}</span>
+                  <span className="text-blue-500 mt-1 shrink-0">•</span>
+                  <span className="break-words">{fact}</span>
                 </li>
               ))}
+              {relationship.keyFacts.length > 3 && (
+                <li className="text-xs text-gray-500 italic">
+                  +{relationship.keyFacts.length - 3} more...
+                </li>
+              )}
             </ul>
           </div>
 
           {relationship.lastInteraction && (
-            <div className="mt-3 p-2 bg-blue-50 dark:bg-blue-900/20 rounded text-sm">
-              <strong>Last interaction:</strong> {relationship.lastInteraction}
+            <div className="mt-3 p-2 bg-blue-50 dark:bg-blue-900/20 rounded-lg text-sm border border-blue-200">
+              <strong className="text-blue-800 dark:text-blue-200">Last:</strong>{' '}
+              <span className="text-gray-700 dark:text-gray-300 break-words">
+                {relationship.lastInteraction}
+              </span>
             </div>
           )}
         </div>
@@ -126,7 +134,7 @@ export function RelationshipList({
   }
 
   return (
-    <div className="space-y-4">
+    <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
       {sortedRelationships.map((relationship) => (
         <RelationshipCard
           key={relationship.id}

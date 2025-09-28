@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 'use client';
 
 import React, { useState, useCallback } from 'react';
@@ -28,10 +29,13 @@ function MemoryApp() {
   }, []);
 
   const handlePhaseChange = useCallback((phase: 'awareness' | 'urgency' | 'critical' | 'reset') => {
-    setPhase(phase);
-    if (phase === 'reset') {
-      handleReset();
-    }
+    // Use setTimeout to avoid setState during render
+    setTimeout(() => {
+      setPhase(phase);
+      if (phase === 'reset') {
+        handleReset();
+      }
+    }, 0);
   }, [setPhase, handleReset]);
 
   const {
@@ -39,9 +43,7 @@ function MemoryApp() {
     currentPhase,
     isActive,
     formatTime,
-    progressPercentage,
-    startTimer,
-    pauseTimer
+    progressPercentage
   } = useMemoryTimer({
     cycleLength: state.user.cycleLength,
     autoStart: state.user.autoStart,
@@ -197,8 +199,6 @@ function MemoryApp() {
               currentPhase={currentPhase}
               formatTime={formatTime}
               progressPercentage={progressPercentage}
-              onStart={startTimer}
-              onPause={pauseTimer}
               isActive={isActive}
             />
 
@@ -223,51 +223,83 @@ function MemoryApp() {
             )}
 
             {/* Recent Critical Info */}
-            <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-4 gap-6">
-              <div className="bg-white/80 dark:bg-gray-800/80 backdrop-blur-lg rounded-2xl p-6 shadow-xl border border-white/20">
+            <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6">
+              <div className="bg-white/80 dark:bg-gray-800/80 backdrop-blur-lg rounded-2xl p-4 shadow-xl border border-white/20 h-fit">
                 <h2 className="text-lg font-bold mb-4 flex items-center gap-2">
                   <List size={20} />
                   Critical Memories
                 </h2>
-                <LogList
-                  logs={state.logs.filter(l => l.priority === 'CRITICAL')}
-                  maxItems={3}
-                  showTimestamps={false}
-                />
+                <div className="max-h-64 overflow-y-auto">
+                  <LogList
+                    logs={state.logs.filter(l => l.priority === 'CRITICAL')}
+                    maxItems={3}
+                    showTimestamps={false}
+                  />
+                </div>
               </div>
 
-              <div className="bg-white/80 dark:bg-gray-800/80 backdrop-blur-lg rounded-2xl p-6 shadow-xl border border-white/20">
+              <div className="bg-white/80 dark:bg-gray-800/80 backdrop-blur-lg rounded-2xl p-4 shadow-xl border border-white/20 h-fit">
                 <h2 className="text-lg font-bold mb-4 flex items-center gap-2">
                   <Users size={20} />
                   Key People
                 </h2>
-                <RelationshipList
-                  relationships={state.relationships.filter(r => r.importance === 'CRITICAL')}
-                  maxItems={2}
-                  onRelationshipClick={handleEditRelationship}
-                />
+                <div className="max-h-64 overflow-y-auto space-y-3">
+                  {state.relationships
+                    .filter(r => r.importance === 'CRITICAL')
+                    .slice(0, 2)
+                    .map(relationship => (
+                      <div key={relationship.id} className="flex items-center gap-3 p-2 rounded-lg hover:bg-white/50 cursor-pointer transition-all"
+                           onClick={() => handleEditRelationship(relationship)}>
+                        <img src={relationship.photo} alt={relationship.name} className="w-10 h-10 rounded-full object-cover" />
+                        <div className="flex-1 min-w-0">
+                          <p className="font-semibold text-sm truncate">{relationship.name}</p>
+                          <p className="text-xs text-gray-600 truncate">{relationship.relation}</p>
+                        </div>
+                      </div>
+                    ))}
+                </div>
               </div>
 
-              <div className="bg-white/80 dark:bg-gray-800/80 backdrop-blur-lg rounded-2xl p-6 shadow-xl border border-white/20">
+              <div className="bg-white/80 dark:bg-gray-800/80 backdrop-blur-lg rounded-2xl p-4 shadow-xl border border-white/20 h-fit">
                 <h2 className="text-lg font-bold mb-4 flex items-center gap-2">
                   <Camera size={20} />
                   Your Hobbies
                 </h2>
-                <HobbyList
-                  hobbies={state.hobbies.filter(h => h.importance === 'HIGH' || h.importance === 'CRITICAL')}
-                  maxItems={2}
-                />
+                <div className="max-h-64 overflow-y-auto space-y-3">
+                  {state.hobbies
+                    .filter(h => h.importance === 'HIGH' || h.importance === 'CRITICAL')
+                    .slice(0, 2)
+                    .map(hobby => (
+                      <div key={hobby.id} className="flex items-center gap-3 p-2 rounded-lg hover:bg-white/50 transition-all">
+                        <img src={hobby.image} alt={hobby.name} className="w-10 h-10 rounded-lg object-cover" />
+                        <div className="flex-1 min-w-0">
+                          <p className="font-semibold text-sm truncate">{hobby.name}</p>
+                          <p className="text-xs text-gray-600 truncate">{hobby.description}</p>
+                        </div>
+                      </div>
+                    ))}
+                </div>
               </div>
 
-              <div className="bg-white/80 dark:bg-gray-800/80 backdrop-blur-lg rounded-2xl p-6 shadow-xl border border-white/20">
+              <div className="bg-white/80 dark:bg-gray-800/80 backdrop-blur-lg rounded-2xl p-4 shadow-xl border border-white/20 h-fit">
                 <h2 className="text-lg font-bold mb-4 flex items-center gap-2">
                   <MapPin size={20} />
                   Important Places
                 </h2>
-                <PlaceList
-                  places={state.places.filter(p => p.importance === 'CRITICAL' || p.importance === 'HIGH')}
-                  maxItems={2}
-                />
+                <div className="max-h-64 overflow-y-auto space-y-3">
+                  {state.places
+                    .filter(p => p.importance === 'CRITICAL' || p.importance === 'HIGH')
+                    .slice(0, 2)
+                    .map(place => (
+                      <div key={place.id} className="flex items-center gap-3 p-2 rounded-lg hover:bg-white/50 transition-all">
+                        <img src={place.image} alt={place.name} className="w-10 h-10 rounded-lg object-cover" />
+                        <div className="flex-1 min-w-0">
+                          <p className="font-semibold text-sm truncate">{place.name}</p>
+                          <p className="text-xs text-gray-600 truncate">{place.description}</p>
+                        </div>
+                      </div>
+                    ))}
+                </div>
               </div>
             </div>
           </div>

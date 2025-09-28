@@ -82,14 +82,14 @@ export function ResetSequence({ onComplete }: ResetSequenceProps) {
   }, []);
 
   useEffect(() => {
-    if (currentStep < steps.length) {
+    if (currentStep < steps.length && isVisible) {
       const timer = setTimeout(() => {
-        setCurrentStep(prev => prev + 1);
+        setCurrentStep(prev => Math.min(prev + 1, steps.length));
       }, steps[currentStep]?.delay || 2000);
 
       return () => clearTimeout(timer);
     }
-  }, [currentStep, steps]);
+  }, [currentStep, steps, isVisible]);
 
   const handleSkip = () => {
     setCurrentStep(steps.length);

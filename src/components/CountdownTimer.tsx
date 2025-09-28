@@ -21,10 +21,8 @@ export function CountdownTimer({
   currentPhase,
   formatTime,
   progressPercentage,
-  onStart,
-  onPause,
   isActive
-}: CountdownTimerProps) {
+}: Omit<CountdownTimerProps, 'onStart' | 'onPause'>) {
   const getPhaseConfig = () => {
     switch (currentPhase) {
       case 'critical':
@@ -82,8 +80,15 @@ export function CountdownTimer({
         <h2 className="text-xl font-bold">{config.message}</h2>
       </div>
 
-      <div className={`${getTimeUrgency()} mb-6 font-mono`}>
-        {formatTime}
+      <div className={`${getTimeUrgency()} mb-6 font-mono flex items-center justify-center gap-4`}>
+        <div className="text-center">
+          <div className="text-lg opacity-75">Time Remaining</div>
+          <div className="text-current">{formatTime}</div>
+        </div>
+        <div className="text-center">
+          <div className="text-lg opacity-75">Seconds</div>
+          <div className="text-current">{timeRemaining}s</div>
+        </div>
       </div>
 
       {/* Progress Bar */}
@@ -104,15 +109,22 @@ export function CountdownTimer({
         )}
       </div>
 
-      {/* Control Button */}
-      {currentPhase !== 'reset' && (
-        <button
-          onClick={isActive ? onPause : onStart}
-          className="px-6 py-3 bg-white/20 hover:bg-white/30 rounded-lg font-semibold transition-all backdrop-blur-sm"
-        >
-          {isActive ? 'Pause Timer' : 'Start Timer'}
-        </button>
-      )}
+      {/* Timer Status */}
+      <div className="text-center">
+        <div className="text-sm opacity-90">
+          {isActive ? (
+            <span className="flex items-center justify-center gap-2">
+              <div className="w-2 h-2 bg-white rounded-full animate-pulse"></div>
+              Timer Active
+            </span>
+          ) : (
+            <span className="flex items-center justify-center gap-2">
+              <div className="w-2 h-2 bg-white/50 rounded-full"></div>
+              Timer Paused
+            </span>
+          )}
+        </div>
+      </div>
     </div>
   );
 }
