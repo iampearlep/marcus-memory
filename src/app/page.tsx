@@ -2,6 +2,7 @@
 'use client';
 
 import React, { useState, useCallback } from 'react';
+import Image from 'next/image';
 import { MemoryProvider, useMemory } from '@/context/MemoryContext';
 import { useMemoryTimer } from '@/hooks/useMemoryTimer';
 import { CountdownTimer } from '@/components/CountdownTimer';
@@ -13,7 +14,7 @@ import { HobbyList } from '@/components/HobbyCard';
 import { PlaceList } from '@/components/PlaceCard';
 import { ResetSequence } from '@/components/ResetSequence';
 import { EmergencyButton } from '@/components/EmergencyButton';
-import { Plus, Users, Clock, List, Menu, X, Camera, MapPin, UserPlus, Heart, Home } from 'lucide-react';
+import { Plus, Users, Clock, List, Menu, X, Camera, MapPin, UserPlus } from 'lucide-react';
 
 function MemoryApp() {
   const { state, resetCycle, setPhase, addLog, setTimerActive } = useMemory();
@@ -110,7 +111,7 @@ function MemoryApp() {
               </div>
               <div>
                 <h1 className="text-2xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
-                  Memory Assistant
+                 Marcus Memory
                 </h1>
                 <p className="text-sm text-gray-600 dark:text-gray-400">
                   Hello, {state.user.name} • Cycle #{state.user.currentCycle}
@@ -250,7 +251,14 @@ function MemoryApp() {
                     .map(relationship => (
                       <div key={relationship.id} className="flex items-center gap-3 p-2 rounded-lg hover:bg-white/50 cursor-pointer transition-all"
                            onClick={() => handleEditRelationship(relationship)}>
-                        <img src={relationship.photo} alt={relationship.name} className="w-10 h-10 rounded-full object-cover" />
+                        <div className="relative w-10 h-10">
+                          <Image 
+                            src={relationship.photo || '/user-placeholder.png'} 
+                            alt={relationship.name}
+                            fill
+                            className="rounded-full object-cover"
+                          />
+                        </div>
                         <div className="flex-1 min-w-0">
                           <p className="font-semibold text-sm truncate">{relationship.name}</p>
                           <p className="text-xs text-gray-600 truncate">{relationship.relation}</p>
@@ -271,7 +279,14 @@ function MemoryApp() {
                     .slice(0, 2)
                     .map(hobby => (
                       <div key={hobby.id} className="flex items-center gap-3 p-2 rounded-lg hover:bg-white/50 transition-all">
-                        <img src={hobby.image} alt={hobby.name} className="w-10 h-10 rounded-lg object-cover" />
+                        <div className="relative w-10 h-10">
+                          <Image 
+                            src={hobby.image || '/hobby-placeholder.png'} 
+                            alt={hobby.name}
+                            fill
+                            className="rounded-lg object-cover"
+                          />
+                        </div>
                         <div className="flex-1 min-w-0">
                           <p className="font-semibold text-sm truncate">{hobby.name}</p>
                           <p className="text-xs text-gray-600 truncate">{hobby.description}</p>
@@ -292,7 +307,14 @@ function MemoryApp() {
                     .slice(0, 2)
                     .map(place => (
                       <div key={place.id} className="flex items-center gap-3 p-2 rounded-lg hover:bg-white/50 transition-all">
-                        <img src={place.image} alt={place.name} className="w-10 h-10 rounded-lg object-cover" />
+                        <div className="relative w-10 h-10">
+                          <Image 
+                            src={place.image || '/place-placeholder.png'} 
+                            alt={place.name}
+                            fill
+                            className="rounded-lg object-cover"
+                          />
+                        </div>
                         <div className="flex-1 min-w-0">
                           <p className="font-semibold text-sm truncate">{place.name}</p>
                           <p className="text-xs text-gray-600 truncate">{place.description}</p>

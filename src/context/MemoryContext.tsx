@@ -1,23 +1,39 @@
 'use client';
 
 import React, { createContext, useContext, useReducer, useEffect } from 'react';
-import { MemoryState, Log, Relationship, Hobby, Place, PhaseType } from '@/types';
+import { MemoryState, PhaseType } from '@/types';
+import { Log, Relationship, Hobby, Place } from '@/types/api';
+import { logs, relationships } from '@/lib/api';
 import { MemoryStorage, defaultUser, defaultRelationships, defaultHobbies, defaultPlaces } from '@/lib/storage';
 import { v4 as uuidv4 } from 'uuid';
 
+import type { User } from '@/types/api';
+
+interface HobbyInput extends Omit<Hobby, 'id' | 'createdAt' | 'updatedAt' | 'userId' | 'details'> {
+  keyDetails?: string[];
+}
+
+interface PlaceInput extends Omit<Place, 'id' | 'createdAt' | 'updatedAt' | 'userId' | 'details'> {
+  keyDetails?: string[];
+}
+
 type MemoryAction =
-  | { type: 'LOAD_STATE' }
-  | { type: 'ADD_LOG'; payload: Omit<Log, 'id' | 'timestamp' | 'cycleNumber'> }
-  | { type: 'ADD_RELATIONSHIP'; payload: Omit<Relationship, 'id'> }
-  | { type: 'ADD_HOBBY'; payload: Omit<Hobby, 'id'> }
-  | { type: 'ADD_PLACE'; payload: Omit<Place, 'id'> }
+  | { type: 'SET_USER'; payload: User }
+  | { type: 'ADD_LOG'; payload: Omit<Log, 'id' | 'createdAt' | 'userId' | 'timestamp' | 'cycleNumber'> }
+  | { type: 'ADD_RELATIONSHIP'; payload: Omit<Relationship, 'id' | 'createdAt' | 'updatedAt'> }
   | { type: 'UPDATE_RELATIONSHIP'; payload: Relationship }
+  | { type: 'ADD_HOBBY'; payload: HobbyInput }
+  | { type: 'ADD_PLACE'; payload: PlaceInput }
   | { type: 'SET_PHASE'; payload: PhaseType }
-  | { type: 'SET_TIME_REMAINING'; payload: number }
+  | { type: 'SET_TIME'; payload: number }
   | { type: 'SET_CONFUSED'; payload: boolean }
+  | { type: 'ADD_TO_QUEUE'; payload: Log }
+  | { type: 'SET_TIME_REMAINING'; payload: number }
   | { type: 'SET_TIMER_ACTIVE'; payload: boolean }
   | { type: 'RESET_CYCLE' }
-  | { type: 'CLEAR_DATA' };
+  | { type: 'CLEAR_DATA' }
+  | { type: 'LOAD_STATE' }
+  | { type: 'LOAD_INITIAL_DATA'; payload: Partial<MemoryState> };
 
 const initialState: MemoryState = {
   user: defaultUser,
@@ -53,34 +69,74 @@ function memoryReducer(state: MemoryState, action: MemoryAction): MemoryState {
     }
 
     case 'ADD_LOG': {
-      const newLog: Log = {
+      const logData: Omit<Log, 'id' | 'createdAt'> = {
         ...action.payload,
-        id: uuidv4(),
+        userId: state.user.id,
         timestamp: Date.now(),
-        cycleNumber: state.user.currentCycle
+        cycleNumber: state.user.currentCycle,
+        isEmergency: action.payload.isEmergency || false,
+        isPersistent: action.payload.isPersistent || false
       };
-      const newState = {
+      
+      logs.create(logData).then(response => {
+        if (response.data) {
+          const newState = {
+            ...state,
+            logs: [...state.logs, response.data]
+          };
+          MemoryStorage.save(newState);
+        }
+      });
+      
+      // Optimistic update
+      const optimisticLog: Log = {
+        ...logData,
+        id: uuidv4(),
+        createdAt: new Date().toISOString()
+      };
+      
+      return {
         ...state,
-        logs: [...state.logs, newLog],
-        reminderQueue: (newLog.priority === 'CRITICAL' || newLog.isPersistent)
-          ? [...state.reminderQueue, newLog]
+        logs: [...state.logs, optimisticLog],
+        reminderQueue: (optimisticLog.priority === 'CRITICAL' || optimisticLog.isPersistent)
+          ? [...state.reminderQueue, optimisticLog]
           : state.reminderQueue
       };
-      MemoryStorage.save(newState);
-      return newState;
     }
 
     case 'ADD_RELATIONSHIP': {
-      const newRelationship: Relationship = {
+      const relationshipData: Omit<Relationship, 'id' | 'createdAt' | 'updatedAt'> = {
         ...action.payload,
-        id: uuidv4()
+        userId: state.user.id,
+        facts: action.payload.facts?.map(f => ({
+          id: 0,  // Will be assigned by backend
+          relationshipId: '',  // Will be assigned by backend
+          fact: f.fact,
+          createdAt: new Date().toISOString()
+        }))
       };
-      const newState = {
+      
+      relationships.create(relationshipData).then(response => {
+        if (response.data) {
+          const newState = {
+            ...state,
+            relationships: [...state.relationships, response.data]
+          };
+          MemoryStorage.save(newState);
+        }
+      });
+      
+      // Optimistic update
+      const optimisticRelationship = { 
+        ...relationshipData, 
+        id: uuidv4(),
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString()
+      };
+      return {
         ...state,
-        relationships: [...state.relationships, newRelationship]
+        relationships: [...state.relationships, optimisticRelationship]
       };
-      MemoryStorage.save(newState);
-      return newState;
     }
 
     case 'UPDATE_RELATIONSHIP': {
@@ -95,26 +151,54 @@ function memoryReducer(state: MemoryState, action: MemoryAction): MemoryState {
     }
 
     case 'ADD_HOBBY': {
-      const newHobby: Hobby = {
+      const hobbyData: Omit<Hobby, 'id' | 'createdAt' | 'updatedAt'> = {
         ...action.payload,
-        id: uuidv4()
+        userId: state.user.id,
+        details: action.payload.keyDetails?.map(detail => ({
+          id: 0, // Will be assigned by backend
+          hobbyId: '', // Will be assigned by backend
+          detail,
+          createdAt: new Date().toISOString()
+        }))
       };
+      
+      const optimisticHobby: Hobby = {
+        ...hobbyData,
+        id: uuidv4(),
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString()
+      };
+      
       const newState = {
         ...state,
-        hobbies: [...state.hobbies, newHobby]
+        hobbies: [...state.hobbies, optimisticHobby]
       };
       MemoryStorage.save(newState);
       return newState;
     }
 
     case 'ADD_PLACE': {
-      const newPlace: Place = {
+      const placeData: Omit<Place, 'id' | 'createdAt' | 'updatedAt'> = {
         ...action.payload,
-        id: uuidv4()
+        userId: state.user.id,
+        details: action.payload.keyDetails?.map(detail => ({
+          id: 0, // Will be assigned by backend
+          placeId: '', // Will be assigned by backend
+          detail,
+          createdAt: new Date().toISOString()
+        }))
       };
+      
+      const optimisticPlace: Place = {
+        ...placeData,
+        id: uuidv4(),
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString()
+      };
+      
       const newState = {
         ...state,
-        places: [...state.places, newPlace]
+        places: [...state.places, optimisticPlace]
       };
       MemoryStorage.save(newState);
       return newState;
@@ -183,6 +267,15 @@ function memoryReducer(state: MemoryState, action: MemoryAction): MemoryState {
       return initialState;
     }
 
+    case 'LOAD_INITIAL_DATA': {
+      const newState = {
+        ...state,
+        ...action.payload
+      };
+      MemoryStorage.save(newState);
+      return newState;
+    }
+
     default:
       return state;
   }
@@ -190,7 +283,8 @@ function memoryReducer(state: MemoryState, action: MemoryAction): MemoryState {
 
 interface MemoryContextType {
   state: MemoryState;
-  addLog: (log: Omit<Log, 'id' | 'timestamp' | 'cycleNumber'>) => void;
+  dispatch: React.Dispatch<MemoryAction>;
+  addLog: (log: Omit<Log, 'id' | 'timestamp' | 'cycleNumber' | 'createdAt' | 'userId'>) => void;
   addRelationship: (relationship: Omit<Relationship, 'id'>) => void;
   updateRelationship: (relationship: Relationship) => void;
   addHobby: (hobby: Omit<Hobby, 'id'>) => void;
@@ -214,6 +308,7 @@ export function MemoryProvider({ children }: { children: React.ReactNode }) {
 
   const value: MemoryContextType = {
     state,
+    dispatch,
     addLog: (log) => dispatch({ type: 'ADD_LOG', payload: log }),
     addRelationship: (relationship) => dispatch({ type: 'ADD_RELATIONSHIP', payload: relationship }),
     updateRelationship: (relationship) => dispatch({ type: 'UPDATE_RELATIONSHIP', payload: relationship }),

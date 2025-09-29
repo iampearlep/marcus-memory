@@ -41,8 +41,8 @@ export function ResetSequence({ onComplete }: ResetSequenceProps) {
       title: 'Most Important People',
       content: state.relationships
         .filter(r => r.importance === 'CRITICAL')
-        .map(r => `${r.name} - ${r.relation}: ${r.keyFacts[0]}`)
-        .join('\n'),
+        .map(r => `${r.name} - ${r.relation}: ${r.facts?.[0]?.fact || 'Important person'}`)
+        .join('\n') || 'No critical relationships saved.',
       priority: 'CRITICAL',
       delay: 3000
     },
@@ -84,7 +84,7 @@ export function ResetSequence({ onComplete }: ResetSequenceProps) {
   useEffect(() => {
     if (currentStep < steps.length && isVisible) {
       const timer = setTimeout(() => {
-        setCurrentStep(prev => Math.min(prev + 1, steps.length));
+        setCurrentStep(prev => prev + 1);
       }, steps[currentStep]?.delay || 2000);
 
       return () => clearTimeout(timer);
