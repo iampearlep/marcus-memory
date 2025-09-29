@@ -20,7 +20,7 @@ interface PlaceInput extends Omit<Place, 'id' | 'createdAt' | 'updatedAt' | 'use
 type MemoryAction =
   | { type: 'SET_USER'; payload: User }
   | { type: 'ADD_LOG'; payload: Omit<Log, 'id' | 'createdAt' | 'userId' | 'timestamp' | 'cycleNumber'> }
-  | { type: 'ADD_RELATIONSHIP'; payload: Omit<Relationship, 'id' | 'createdAt' | 'updatedAt'> }
+  | { type: 'ADD_RELATIONSHIP'; payload: Omit<Relationship, 'id' | 'createdAt' | 'updatedAt' | 'userId'> }
   | { type: 'UPDATE_RELATIONSHIP'; payload: Relationship }
   | { type: 'ADD_HOBBY'; payload: HobbyInput }
   | { type: 'ADD_PLACE'; payload: PlaceInput }
@@ -285,7 +285,7 @@ interface MemoryContextType {
   state: MemoryState;
   dispatch: React.Dispatch<MemoryAction>;
   addLog: (log: Omit<Log, 'id' | 'timestamp' | 'cycleNumber' | 'createdAt' | 'userId'>) => void;
-  addRelationship: (relationship: Omit<Relationship, 'id'>) => void;
+  addRelationship: (relationship: Omit<Relationship, 'id' | 'createdAt' | 'updatedAt' | 'userId'>) => void;
   updateRelationship: (relationship: Relationship) => void;
   addHobby: (hobby: Omit<Hobby, 'id'>) => void;
   addPlace: (place: Omit<Place, 'id'>) => void;

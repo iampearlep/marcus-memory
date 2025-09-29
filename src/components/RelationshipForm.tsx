@@ -19,9 +19,9 @@ export function RelationshipForm({ onClose, editingRelationship }: RelationshipF
     photo: editingRelationship?.photo || '',
     contactInfo: editingRelationship?.contactInfo || '',
     birthday: editingRelationship?.birthday || '',
-    relationship: editingRelationship?.relationship || 'other' as const,
+    relationship: editingRelationship?.relationshipType || 'other' as const,
     importance: editingRelationship?.importance || 'MEDIUM' as Priority,
-    keyFacts: editingRelationship?.keyFacts?.join('\n') || '',
+    keyFacts: editingRelationship?.facts?.map(f => f.fact).join('\n') || '',
     lastInteraction: editingRelationship?.lastInteraction || ''
   });
 
@@ -29,27 +29,44 @@ export function RelationshipForm({ onClose, editingRelationship }: RelationshipF
     e.preventDefault();
     if (!formData.name.trim() || !formData.relation.trim()) return;
 
-    const relationshipData = {
-      name: formData.name.trim(),
-      relation: formData.relation.trim(),
-      photo: formData.photo.trim() || undefined,
-      contactInfo: formData.contactInfo.trim() || undefined,
-      birthday: formData.birthday.trim() || undefined,
-      relationship: formData.relationship,
-      importance: formData.importance,
-      keyFacts: formData.keyFacts
-        .split('\n')
-        .map(fact => fact.trim())
-        .filter(fact => fact.length > 0),
-      lastInteraction: formData.lastInteraction.trim() || undefined
-    };
+    const facts = formData.keyFacts
+      .split('\n')
+      .map(fact => fact.trim())
+      .filter(fact => fact.length > 0)
+      .map(fact => ({
+        id: 0,
+        relationshipId: editingRelationship?.id || '',
+        fact,
+        createdAt: new Date().toISOString()
+      }));
 
     if (editingRelationship) {
-      updateRelationship({
-        ...relationshipData,
-        id: editingRelationship.id
-      });
+      const relationshipData: Relationship = {
+        ...editingRelationship,
+        name: formData.name.trim(),
+        relation: formData.relation.trim(),
+        photo: formData.photo.trim() || undefined,
+        contactInfo: formData.contactInfo.trim() || undefined,
+        birthday: formData.birthday.trim() || undefined,
+        relationshipType: formData.relationship,
+        importance: formData.importance,
+        facts,
+        lastInteraction: formData.lastInteraction.trim() || undefined,
+        updatedAt: new Date().toISOString()
+      };
+      updateRelationship(relationshipData);
     } else {
+      const relationshipData = {
+        name: formData.name.trim(),
+        relation: formData.relation.trim(),
+        photo: formData.photo.trim() || undefined,
+        contactInfo: formData.contactInfo.trim() || undefined,
+        birthday: formData.birthday.trim() || undefined,
+        relationshipType: formData.relationship,
+        importance: formData.importance,
+        facts,
+        lastInteraction: formData.lastInteraction.trim() || undefined
+      };
       addRelationship(relationshipData);
     }
 

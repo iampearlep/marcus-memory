@@ -77,15 +77,15 @@ export function RelationshipCard({ relationship, onClick }: RelationshipCardProp
               Key Facts:
             </h4>
             <ul className="space-y-1 max-h-24 overflow-y-auto">
-              {relationship.keyFacts.slice(0, 3).map((fact, index) => (
+              {relationship.facts?.slice(0, 3).map((fact, index) => (
                 <li key={index} className="text-sm text-gray-700 dark:text-gray-300 flex items-start gap-2">
                   <span className="text-blue-500 mt-1 shrink-0">•</span>
-                  <span className="break-words">{fact}</span>
+                  <span className="break-words">{fact.fact}</span>
                 </li>
               ))}
-              {relationship.keyFacts.length > 3 && (
+              {(relationship.facts?.length || 0) > 3 && (
                 <li className="text-xs text-gray-500 italic">
-                  +{relationship.keyFacts.length - 3} more...
+                  +{(relationship.facts?.length || 0) - 3} more...
                 </li>
               )}
             </ul>

@@ -86,15 +86,15 @@ export function PlaceCard({ place, onClick }: PlaceCardProps) {
           )}
 
           <div className="space-y-1">
-            {place.keyDetails.slice(0, 3).map((detail, index) => (
+            {place.details?.slice(0, 3).map((detail, index) => (
               <p key={index} className="text-sm text-gray-700 dark:text-gray-300 flex items-start gap-2">
                 <span className="text-green-500 mt-1">•</span>
-                <span>{detail}</span>
+                <span>{detail.detail}</span>
               </p>
             ))}
-            {place.keyDetails.length > 3 && (
+            {(place.details?.length || 0) > 3 && (
               <p className="text-xs text-gray-500 italic">
-                +{place.keyDetails.length - 3} more details...
+                +{(place.details?.length || 0) - 3} more details...
               </p>
             )}
           </div>

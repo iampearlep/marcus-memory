@@ -123,7 +123,7 @@ export function ResetSequence({ onComplete }: ResetSequenceProps) {
                 <strong>Emergency:</strong> Red button (bottom right)
               </div>
               <div>
-                <strong>Log Memory:</strong> Blue "+" button
+                <strong>Log Memory:</strong> Blue &quot;+&quot; button
               </div>
               <div>
                 <strong>Your Wife:</strong> Sarah Chen

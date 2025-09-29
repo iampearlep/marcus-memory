@@ -44,7 +44,7 @@ export function EmergencyButton() {
                 <div key={r.id} className="mb-2">
                   <strong>{r.name}</strong> - {r.relation}
                   <br />
-                  <small>{r.keyFacts[0]}</small>
+                  <small>{r.facts?.[0]?.fact || 'No details available'}</small>
                 </div>
               ))}
           </div>
